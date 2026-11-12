@@ -1,0 +1,82 @@
+name: Build PulseLink Cast (Windows EXE + Installer & Android APK)
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+  workflow_dispatch:
+
+jobs:
+  build-windows-host:
+    name: Build Windows Host (.exe & Setup Installer)
+    runs-on: windows-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Dependencies
+        working-directory: windows-host
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run Protocol & Permissions Unit Tests
+        working-directory: windows-host
+        run: |
+          python -m unittest discover -s tests -v
+
+      - name: Package Standalone Windows Executable via PyInstaller
+        working-directory: windows-host
+        run: |
+          pyinstaller --noconfirm --onefile --windowed --name PulseLinkCastHost --icon=assets/app_icon.ico --add-data "assets;assets" main.py
+
+      - name: Compile Windows Setup Installer via Inno Setup
+        working-directory: windows-host
+        run: |
+          iscc installer\PulseLinkSetup.iss
+
+      - name: Upload Windows Portable EXE & Setup Installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: PulseLinkCast-Windows-Installer-and-EXE
+          path: |
+            windows-host/dist/PulseLinkCastHost.exe
+            windows-host/installer/dist/PulseLinkCast_Windows_Setup.exe
+
+  build-android-apk:
+    name: Build Android Client (.apk)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: "17"
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: "8.5"
+
+      - name: Assemble Debug & Release APK
+        working-directory: android-app
+        run: |
+          gradle assembleDebug
+
+      - name: Upload Android APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: PulseLinkCast-Android-APK
+          path: android-app/app/build/outputs/apk/debug/*.apk

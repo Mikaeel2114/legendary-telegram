@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="bg_primary">#F1F5F9</color>
+    <color name="bg_card">#FFFFFF</color>
+    <color name="text_primary">#0F172A</color>
+    <color name="text_secondary">#475569</color>
+    <color name="accent_cyan">#0284C7</color>
+    <color name="accent_violet">#6366F1</color>
+    <color name="status_live">#10B981</color>
+    <color name="danger_red">#EF4444</color>
+    <color name="dock_surface">#E2E8F0</color>
+</resources>
